@@ -2,7 +2,7 @@
 title: Monochrome
 date: 2026-11
 status: released
-category: product
+category: browser-extension
 tags: [macos, browser-extension]
 url: https://github.com/arfct/monochrome
 links:
