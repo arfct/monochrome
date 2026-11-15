@@ -41,8 +41,7 @@ final class GeneralModel: ObservableObject {
     isDefaultBrowser = NSWorkspace.shared.urlForApplication(toOpen: URL(string: "https://example.com")!) == Bundle.main.bundleURL
     browserWarning = browser == .chrome && Chrome.runningWithFlags() == false
       ? "Chrome is running without its launch flags. Quit it (⌘Q) and open it from the Dock." : nil
-    // Safari's history is behind Full Disk Access: readable or not.
-    fullDiskAccess = SafariHistory.databaseURL(profile: "").flatMap { try? FileHandle(forReadingFrom: $0) }.map { try? $0.close(); return true } ?? false
+    fullDiskAccess = Self.hasFullDiskAccess
     // The Dock's preferences are read through `defaults`, so not on every refresh.
     if Date().timeIntervalSince(dockReadAt) > 10 {
       dockReadAt = Date()
@@ -103,8 +102,16 @@ final class GeneralModel: ObservableObject {
 
   func openExtensionShortcuts() { Chrome.open([URL(string: "chrome://extensions/shortcuts")!], activate: true) }
 
-  static func openPrivacyPane(_ anchor: String) {
-    NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?\(anchor)")!)
+  // Safari's history is behind Full Disk Access: readable or not.
+  static var hasFullDiskAccess: Bool {
+    SafariHistory.databaseURL(profile: "").flatMap { try? FileHandle(forReadingFrom: $0) }.map { try? $0.close(); return true } ?? false
+  }
+
+  // System Settings at the permission's list, with the guide beside it: the steps, and the app's icon
+  // to drag onto the list when Monochrome isn't in it (PermissionGuide.swift).
+  @MainActor static func guideAccessibility() { PermissionGuide.shared.show(.accessibility(app: "Monochrome")) }
+  @MainActor static func guideFullDiskAccess() {
+    PermissionGuide.shared.show(.fullDiskAccess(app: "Monochrome", isGranted: { hasFullDiskAccess }))
   }
 }
 
@@ -182,7 +189,7 @@ struct GeneralSettings: View {
         StatusRow(title: "Default browser", detail: "Links from other apps reach Monochrome first", symbol: "link",
                   ok: model.isDefaultBrowser, okText: "Monochrome", button: "Make Default…", action: model.makeDefault)
         StatusRow(title: "Accessibility", detail: "For ⌃Tab, ⌥⌘-click, ⌘L, ⌘T and the profile hotkeys", symbol: "accessibility",
-                  ok: model.accessibility, okText: "Allowed", button: "Open Settings…") { GeneralModel.openPrivacyPane("Privacy_Accessibility") }
+                  ok: model.accessibility, okText: "Allowed", button: "Open Settings…") { GeneralModel.guideAccessibility() }
       }
     }
     .onAppear { automatic = updates.get() }
@@ -359,7 +366,7 @@ struct CommandBarSettings: View {
         SettingToggle("Google suggestions", detail: "What is typed goes to Google as it is typed", symbol: "text.magnifyingglass", isOn: Prefs.binding(.omniboxSuggestions))
         if model.safariInPlay {
           StatusRow(title: "Full Disk Access", detail: "For Safari's history and bookmarks", symbol: "internaldrive", ok: model.fullDiskAccess, okText: "Allowed",
-                    button: "Open Settings…") { GeneralModel.openPrivacyPane("Privacy_AllFiles") }
+                    button: "Open Settings…") { GeneralModel.guideFullDiskAccess() }
         }
       }
     }
