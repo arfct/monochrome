@@ -8,9 +8,9 @@ url: https://github.com/arfct/monochrome
 links:
   source: https://github.com/arfct/monochrome
 media:
-  - src: switcher.jpg
-    caption: The switcher, shown while Control is held, with the five most recent tabs of the window as thumbnails
-    alt: Five rounded page thumbnails in a row on a glass panel, each with a favicon and a title beneath, the last one outlined
+  - src: switcher.png
+    caption: The switcher over a page on size.fyi while Control is held, with the five most recent tabs of the window as thumbnails and the next one, Hacker News, highlighted
+    alt: A glass panel across the middle of a web page of three overlapping translucent boxes on a grid, holding five rounded page thumbnails in a row titled size.fyi, Hacker News, Artifact, Emoji Kitchen Browser and Emoji Wallpaper, each with a favicon, the second framed in dark grey
   - src: profiles.jpg
     caption: The profile display, which names each Chrome profile by an initial on a color derived from its name
     alt: A small glass panel with three lettered circles labelled Work, Personal and Geist, the middle one marked
