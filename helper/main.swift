@@ -8,7 +8,13 @@
 //   --unregister    remove the login item, then quit
 //   --register-host write the native messaging host manifests for this copy of the app, then quit
 //   --demo          show the ⌃Tab switcher with sample tabs, to look at it (nothing else runs); prints
-//                   the panel's rectangle on stderr for screencapture -R
+//                   the panel's rectangle on stderr for screencapture -R. --thumbs=<dir>: the tabs from
+//                   <dir>/tabs.json ([{"title", "favicon"}], favicon a file in <dir>, optional) with <n>.png as
+//                   tab n's thumbnail, the walk stopped on the second, as one ⌃Tab leaves it
+//   --backdrop      (with --demo, --demo-profiles, --demo-settings) a plain window behind the panel; --backdrop=<image>
+//                   draws that image instead, the window at its size in points; --capture=<out.png> then writes
+//                   the backdrop's rectangle with the panel over it into a PNG from inside the app (its own
+//                   windows need no screen recording permission) and quits
 //   --demo-shade    the peek browser shade over Chrome's second window, ordered below its first; prints its rectangle
 //   --demo-profiles the profile HUD on Chrome's real Profiles menu, nothing pressed; prints its rectangle
 //   --status        the keycodes the current layout gives the shortcut keys, whether the app half is up and
@@ -148,19 +154,53 @@ default:
 }
 
 // --backdrop: a plain 1280 by 800 window behind the panel, for a screenshot that shows nothing else;
-// its screen rectangle goes to stderr for screencapture -R.
+// its screen rectangle goes to stderr for screencapture -R. --backdrop=<image> draws that image instead,
+// the window at the image's size in points; --capture=<out.png> writes the rectangle into a PNG and quits.
 @discardableResult
 func showBackdropIfAsked() -> NSWindow? {
-  guard CommandLine.arguments.contains("--backdrop") else { return nil }
-  let backdrop = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1280, height: 800), styleMask: [.borderless], backing: .buffered, defer: false)
+  let arg = CommandLine.arguments.first { $0 == "--backdrop" || $0.hasPrefix("--backdrop=") }
+  guard let arg else { return nil }
+  let image = arg.hasPrefix("--backdrop=") ? NSImage(contentsOfFile: String(arg.dropFirst(11))) : nil
+  if arg.hasPrefix("--backdrop=") && image == nil { FileHandle.standardError.write(Data("no image at \(arg.dropFirst(11))\n".utf8)); exit(1) }
+  let size = image.map { image in
+    let rep = image.representations.first, scale = NSScreen.main?.backingScaleFactor ?? 1
+    return rep.map { NSSize(width: CGFloat($0.pixelsWide) / scale, height: CGFloat($0.pixelsHigh) / scale) } ?? image.size
+  } ?? NSSize(width: 1280, height: 800)
+  let backdrop = NSWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.borderless], backing: .buffered, defer: false)
   backdrop.level = .floating
-  backdrop.contentView = GradientView()
+  if let image {
+    let view = NSImageView(image: image)
+    view.imageScaling = .scaleAxesIndependently
+    backdrop.contentView = view
+  } else {
+    backdrop.contentView = GradientView()
+  }
   backdrop.center()
   backdrop.orderFrontRegardless()
   Chrome.demoAnchor = backdrop.frame
   let f = backdrop.frame, top = (NSScreen.screens.first?.frame.height ?? 0) - f.maxY
   FileHandle.standardError.write(Data("backdrop \(Int(f.minX)),\(Int(top)),\(Int(f.width)),\(Int(f.height))\n".utf8))
+  if let out = CommandLine.arguments.first(where: { $0.hasPrefix("--capture=") })?.dropFirst(10) {
+    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { exit(captureAbove(backdrop, to: String(out)) ? 0 : 1) }
+  }
   return backdrop
+}
+
+// The window and this app's windows over it, at the display's resolution. CGWindowListCreateImage is
+// marked unavailable in the SDK, so it is looked up at run time; an app may image its own windows
+// without the screen recording permission screencapture needs.
+func captureAbove(_ window: NSWindow, to out: String) -> Bool {
+  typealias Capture = @convention(c) (CGRect, UInt32, UInt32, UInt32) -> Unmanaged<CGImage>?
+  guard let lib = dlopen("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics", RTLD_NOW),
+        let sym = dlsym(lib, "CGWindowListCreateImage") else { return false }
+  let f = window.frame, top = (NSScreen.screens.first?.frame.height ?? 0) - f.maxY
+  // kCGWindowListOptionOnScreenAboveWindow | IncludingWindow; kCGWindowImageBoundsIgnoreFraming | BestResolution
+  guard let image = unsafeBitCast(sym, to: Capture.self)(CGRect(x: f.minX, y: top, width: f.width, height: f.height), 2 | 8,
+                                                          UInt32(truncatingIfNeeded: window.windowNumber), 1 | 8)?.takeRetainedValue(),
+        let png = NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:]) else { return false }
+  guard (try? png.write(to: URL(fileURLWithPath: out))) != nil else { return false }
+  print(out)
+  return true
 }
 
 final class GradientView: NSView {
