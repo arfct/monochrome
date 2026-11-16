@@ -304,6 +304,10 @@ struct TabsSettings: View {
 
 struct MiniBrowserSettings: View {
   @ObservedObject private var prefs = PrefsObserver.shared
+  // Keep picker selections in SwiftUI's state graph as well as in the app's defaults. A closure
+  // binding that only reads Prefs can save a value without refreshing the popup button's title.
+  @AppStorage(Pref.routeDefault.rawValue, store: Prefs.store) private var routeDefault = RouteDefault.mini
+  @AppStorage(Pref.miniIdleHours.rawValue, store: Prefs.store) private var miniIdleHours = 12
   private static let idle = [(0, "Never"), (1, "1 hour"), (12, "12 hours"), (24, "1 day"), (168, "1 week")]
 
   var body: some View {
@@ -316,13 +320,13 @@ struct MiniBrowserSettings: View {
     } right: {
       Section("Opening and Closing") {
         SettingRow("Links from other apps", detail: "Open this way when no Router rule claims them", symbol: "arrow.up.right.square") {
-          Picker("Links from other apps open as", selection: Binding(get: { Prefs.routeDefault }, set: { Prefs.set(.routeDefault, $0.rawValue) })) {
+          Picker("Links from other apps open as", selection: $routeDefault) {
             ForEach(RouteDefault.allCases) { Text($0.title).tag($0) }
           }
           .labelsHidden().fixedSize()
         }
         SettingRow("Close when unused for", detail: "A mini browser left unfocused closes itself", symbol: "moon.zzz") {
-          Picker("Close when unused for", selection: Binding(get: { Prefs.miniIdleHours }, set: { Prefs.set(.miniIdleHours, $0) })) {
+          Picker("Close when unused for", selection: $miniIdleHours) {
             ForEach(Self.idle, id: \.0) { Text($0.1).tag($0.0) }
           }
           .labelsHidden().fixedSize()

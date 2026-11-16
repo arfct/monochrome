@@ -69,7 +69,8 @@
     }
   ],
   "action": {
-    "default_title": "Reset pinned tab",
+    "default_title": "Monochrome",
+    "default_popup": "options.html",
     "default_icon": {
       "16": "icons/16.png",
       "32": "icons/32.png"

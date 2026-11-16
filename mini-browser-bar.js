@@ -7,29 +7,39 @@
   if (document.getElementById('monochrome-mini-bar')) return;
   const host = document.createElement('div');
   host.id = 'monochrome-mini-bar';
-  host.style.cssText = 'all: initial; position: fixed; top: 10px; right: 10px; z-index: 2147483647;';
+  host.style.cssText = 'all: initial; color-scheme: light dark; position: fixed; top: 10px; right: 10px; z-index: 2147483647;';
   const root = host.attachShadow({ mode: 'closed' });
   root.innerHTML = `
     <style>
+      :host { --bar-bg: rgba(250,250,252,.9); --panel-bg: rgba(255,255,255,.95); --text: #202124; --muted: #55595e;
+              --hover: rgba(0,0,0,.06); --line: rgba(0,0,0,.12); --ring: #0071e3;
+              --group-grey: #5f6368; --group-blue: #1a73e8; --group-red: #d93025; --group-yellow: #9a6700;
+              --group-green: #188038; --group-pink: #b80672; --group-purple: #8430ce; --group-cyan: #007b83; --group-orange: #b06000; }
+      @media (prefers-color-scheme: dark) {
+        :host { --bar-bg: rgba(32,32,36,.82); --panel-bg: rgba(32,32,36,.95); --text: #fff; --muted: #d0d0d4;
+                --hover: rgba(255,255,255,.12); --line: rgba(255,255,255,.15); --ring: #0a84ff;
+                --group-grey: #9aa0a6; --group-blue: #8ab4f8; --group-red: #f28b82; --group-yellow: #fdd663;
+                --group-green: #81c995; --group-pink: #ff8bcb; --group-purple: #c58af9; --group-cyan: #78d9ec; --group-orange: #fcad70; }
+      }
       .bar, .menu, .address { font: 13px/1 -apple-system, BlinkMacSystemFont, sans-serif; }
-      .bar { display: flex; border-radius: 9px; overflow: hidden; background: rgba(32,32,36,.82);
-             color: #fff; backdrop-filter: blur(12px); box-shadow: 0 2px 12px rgba(0,0,0,.25); opacity: .9; }
+      .bar { display: flex; border-radius: 9px; overflow: hidden; background: var(--bar-bg);
+             color: var(--text); backdrop-filter: blur(12px); box-shadow: 0 2px 12px rgba(0,0,0,.25); opacity: .9; }
       .bar:hover { opacity: 1; }
       button { all: unset; cursor: default; padding: 7px 10px; }
-      button:hover { background: rgba(255,255,255,.12); }
-      .caret, .open, .reader { border-left: 1px solid rgba(255,255,255,.15); }
+      button:hover { background: var(--hover); }
+      .caret, .open, .reader { border-left: 1px solid var(--line); }
       .caret { padding: 7px 8px; }
-      kbd { font: inherit; opacity: .55; margin-left: 6px; }
+      kbd { font: inherit; color: var(--muted); margin-left: 6px; }
       .menu { position: absolute; right: 0; top: 34px; min-width: 200px; padding: 4px; border-radius: 9px;
-              background: rgba(32,32,36,.95); color: #fff; box-shadow: 0 6px 24px rgba(0,0,0,.35); }
+              background: var(--panel-bg); color: var(--text); box-shadow: 0 6px 24px rgba(0,0,0,.35); }
       .menu[hidden], .address[hidden] { display: none; }
       .menu button { display: flex; align-items: center; gap: 8px; width: calc(100% - 20px); border-radius: 6px; }
-      .menu .head { padding: 6px 10px 2px; font-size: 11px; opacity: .5; }
+      .menu .head { padding: 6px 10px 2px; font-size: 11px; color: var(--muted); }
       .dot { width: 8px; height: 8px; border-radius: 50%; }
       .address { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); width: min(640px, calc(100vw - 32px)); }
       .address input { box-sizing: border-box; width: 100%; padding: 10px 12px; border: 0; border-radius: 10px; outline: none;
-                       font: 14px -apple-system, BlinkMacSystemFont, sans-serif; color: #fff; background: rgba(32,32,36,.95);
-                       box-shadow: 0 6px 24px rgba(0,0,0,.35), 0 0 0 2px #0a84ff; }
+                       font: 14px -apple-system, BlinkMacSystemFont, sans-serif; color: var(--text); background: var(--panel-bg);
+                       box-shadow: 0 6px 24px rgba(0,0,0,.35), 0 0 0 2px var(--ring); }
     </style>
     <div class="bar">
       <button class="url" title="Address (⌘L)">🔗</button>
@@ -42,8 +52,7 @@
   const menu = root.querySelector('.menu');
   const address = root.querySelector('.address');
   const field = address.querySelector('input');
-  const colors = { grey: '#9aa0a6', blue: '#8ab4f8', red: '#f28b82', yellow: '#fdd663', green: '#81c995',
-                   pink: '#ff8bcb', purple: '#c58af9', cyan: '#78d9ec', orange: '#fcad70' };
+  const colors = ['grey', 'blue', 'red', 'yellow', 'green', 'pink', 'purple', 'cyan', 'orange'];
   const move = to => chrome.runtime.sendMessage({ mini: 'move', to });
 
   async function toggleMenu() {
@@ -62,7 +71,7 @@
         const b = document.createElement('button');
         const dot = document.createElement('span');
         dot.className = 'dot';
-        dot.style.background = colors[g.color] || colors.grey;
+        dot.style.background = `var(--group-${colors.includes(g.color) ? g.color : 'grey'})`;
         b.append(dot, g.title);
         b.onclick = () => move({ windowId: w.windowId, groupId: g.id });
         menu.append(b);
