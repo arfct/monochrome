@@ -1,0 +1,35 @@
+/* Load this before page styles on every extension HTML page. Use these colors for custom surfaces;
+   the browser updates them when the system appearance changes, including while a page is open.
+   Injected UI in a shadow root supplies its own styles (mini-browser-bar.js, tldr/core/reader.css.js). */
+:root {
+  color-scheme: light dark;
+  --bg: #fff;
+  --text: #202124;
+  --surface: rgba(0,0,0,.05);
+  --field: #fff;
+  --muted: #5f6368;
+  --accent: #1a73e8;
+  --positive: #1e8e3e;
+  --border: rgba(128,128,128,.4);
+  background: var(--bg);
+  color: var(--text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #202124;
+    --text: #e8eaed;
+    --surface: rgba(255,255,255,.06);
+    --field: #292a2d;
+    --muted: #9aa0a6;
+    --accent: #8ab4f8;
+    --positive: #81c995;
+  }
+}
+
+body { background: var(--bg); color: var(--text); }
+a { color: var(--accent); }
+button, input, select, textarea { font: inherit; color: inherit; border: 1px solid var(--border); }
+button { background: var(--surface); }
+input, select, textarea { background: var(--field); }
+input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }

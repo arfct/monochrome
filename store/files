@@ -1,6 +1,7 @@
 manifest.json
 options.html
 options.js
+theme.css
 mini-browser.html
 background.js
 helper.js
