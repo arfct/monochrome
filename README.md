@@ -43,8 +43,6 @@ Requires macOS 13 or later and Google Chrome. Chrome Beta, Dev, Canary and Chrom
 
 The extension's fallback commands are in `chrome://extensions/shortcuts`. Chrome pre-fills ⌃R, ⌃., ⌃⇧. and ⌃, on a fresh load. ⌥⇧N (scope Global), ⌘O and ⇧⌘O have no defaults and matter only when the app is not running.
 
-For proposed ways to install and update the extension alongside the app, see [Chrome extension installation and updates](docs/extension-distribution.md).
-
 ## Safari
 
 Monochrome.app carries a Safari Web Extension built from the same files (`safari/`, the `MonochromeSafari` target in `project.yml`). To use Monochrome with Safari:
