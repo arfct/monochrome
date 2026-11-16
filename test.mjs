@@ -747,13 +747,18 @@ if (fs.existsSync(helperBinary)) {
   assert.equal(await sw.evaluate(() => 'lockedGroup' in sentToApp.find(m => m.hello).hello), false);
   console.log('prefs: legacy title in hello, gone after prefs: ok');
 
-  // The options page: the title read-only while the app is connected; editable, and kept, while not.
+  // The toolbar opens the options screen, with its route to the app's settings. The title is
+  // read-only while the app is connected; editable, and kept, while not.
   const id = await sw.evaluate(() => chrome.runtime.id);
+  assert.equal(await sw.evaluate(() => chrome.action.getPopup({})), `chrome-extension://${id}/options.html`);
   const options = await ctx.newPage();
   await options.goto(`chrome-extension://${id}/options.html`);
   await options.waitForSelector('body[data-ready]');
   assert.equal(await options.isDisabled('#group'), true);
   assert.equal(await options.isVisible('#app-settings'), true);
+  await options.click('#app-settings');
+  for (let i = 0; i < 30 && !(await sw.evaluate(() => sentToApp.some(m => m.settings))); i++) await sleep(50);
+  assert.equal(await sw.evaluate(() => sentToApp.some(m => m.settings === true)), true);
   await realHelper();
   await options.reload();
   await options.waitForSelector('body[data-ready]');
@@ -765,7 +770,7 @@ if (fs.existsSync(helperBinary)) {
   assert.deepEqual(await sw.evaluate(() => chrome.storage.local.get(['prefs', 'lockedGroup'])), { prefs: { ...defaults, lockedGroup: 'Home' }, lockedGroup: 'Home' });
   await options.close();
   await setPrefs({});
-  console.log('prefs: options page group title, read-only when connected: ok');
+  console.log('prefs: toolbar popup, app settings button, and group title: ok');
 
   // player off: no player state. playerStopPopout off: the site's own pop-out handler runs when the
   // browser asks for it; on (the default): it never reaches the browser.
