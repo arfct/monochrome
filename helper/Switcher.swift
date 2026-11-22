@@ -131,8 +131,11 @@ final class Switcher {
 
   func forget(tab id: Int) { model.thumbs[id] = nil }
 
-  // --demo: the panel with sample tabs, to look at.
+  // --demo: the panel with sample tabs, to look at; --thumbs=<dir>: with given tabs (main.swift).
   func demo() {
+    if let dir = CommandLine.arguments.first(where: { $0.hasPrefix("--thumbs=") }).map({ String($0.dropFirst(9)) }) {
+      return demo(thumbs: URL(fileURLWithPath: dir))
+    }
     let colors: [NSColor] = [.systemBlue, .systemOrange, .systemGreen, .systemPink, .systemTeal, .systemIndigo, .systemBrown]
     tabs = ["Monochrome", "Liquid Glass | Apple Developer Documentation", "Inbox (3) - Gmail", "Figma", "Hacker News",
             "Chrome Extensions: chrome.tabs", "YouTube"].enumerated().map { i, title in
@@ -155,6 +158,26 @@ final class Switcher {
     step(back: false)
     Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in self?.step(back: false) } // keeps walking, to watch
     // The panel's screen rectangle, top-left origin, for screencapture -R.
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [self] in
+      let f = panel.frame, top = (NSScreen.screens.first?.frame.height ?? 0) - f.maxY
+      FileHandle.standardError.write(Data("panel \(Int(f.minX)),\(Int(top)),\(Int(f.width)),\(Int(f.height))\n".utf8))
+    }
+  }
+
+  // <dir>/tabs.json: [{"title": ..., "favicon": "file in dir"}], most recent first, and <n>.png the
+  // thumbnail of tab n. The walk stops on the second tab, where one ⌃Tab leaves it.
+  private func demo(thumbs dir: URL) {
+    guard let data = try? Data(contentsOf: dir.appendingPathComponent("tabs.json")),
+          let list = (try? JSONSerialization.jsonObject(with: data)) as? [[String: String]] else {
+      FileHandle.standardError.write(Data("no tabs.json in \(dir.path)\n".utf8))
+      exit(1)
+    }
+    tabs = list.enumerated().map { i, tab in
+      TabInfo(id: i, windowId: 1, title: tab["title"] ?? "", favicon: tab["favicon"].flatMap { NSImage(contentsOf: dir.appendingPathComponent($0)) })
+    }
+    for i in tabs.indices { model.thumbs[i] = NSImage(contentsOf: dir.appendingPathComponent("\(i).png")) }
+    frontWindow = 1
+    step(back: false)
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [self] in
       let f = panel.frame, top = (NSScreen.screens.first?.frame.height ?? 0) - f.maxY
       FileHandle.standardError.write(Data("panel \(Int(f.minX)),\(Int(top)),\(Int(f.width)),\(Int(f.height))\n".utf8))

@@ -429,8 +429,6 @@ chrome.windows.onFocusChanged.addListener(async windowId => {
 
 importScripts('mini-browser.js', 'routes.js', 'player.js', 'helper.js', 'omnibox.js', 'tldr-background.js');
 
-chrome.action.onClicked.addListener(reset);
-
 // The options page asks what it shows, sets the locked group's title while the app is away (kept also
 // under the legacy key, so the app adopts it at the next hello if it has none of its own), and opens
 // the app's settings window.

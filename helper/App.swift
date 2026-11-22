@@ -124,6 +124,8 @@ final class App: NSObject, NSApplicationDelegate {
     NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: Prefs.store, queue: .main) { [weak self] _ in self?.prefsChanged() }
 
     Chrome.onBrowserChange = { [weak self] in self?.merge() }
+    // The tap holds mouse events, so a drag of the permission guide's icon never lands while it runs.
+    PermissionGuide.shared.onDrag = { dragging in Tap.shared?.enable(!dragging) }
     tap.switcher = switcher
     tap.useSwitcher = { [weak self] in
       guard let self else { return false }

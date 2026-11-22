@@ -8,7 +8,7 @@
 
 [build] is CFBundleVersion, the number Sparkle compares to decide what is newer: a whole number
 that goes up by one on every release, betas included (Primer, deployment.md, "Sparkle"). Left out,
-it is the current one plus one. Releases up to 1.4 used the version as the build ("1.4"); Sparkle
+it is the current one plus one. Releases up to 1.4.1 used the version as the build ("1.4.1"); Sparkle
 reads any whole number of 2 or more as newer than those, so the first numbered build is given by
 hand (6) and the rest count from it.
 

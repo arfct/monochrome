@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Monochrome",
-  "version": "1.4",
+  "version": "1.4.1",
   "description": "Locked tabs, new tabs at the top, a ⌃Tab switcher with thumbnails, mini and peek browsers, and link routing for Chrome.",
   "homepage_url": "https://github.com/arfct/monochrome",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArLQ0EHNliKBwkQggWlh+HQnWo9Gl6DL8olNPVvCzDZVVrA0OcbZfwftTAZCtcJhkmZF93bEOMqKeSI1FIGfFZlMq0t+KfQ+m4eM7pFpWqRyIPodlF0io7F7V6dKJCIQgCIGUivmKMOMkNloixgYaC79Du5lrIX+n7feL+EEKzXjoGRUA4tmr8I6HEAspRXG+fp+HTRaYQ5ZXsPyGKBYdAbLmEERIICozQ55Kj7vaW/TTOovu9iCI9GGl10Xc+LFOGeIJvE1FkzrN/0Li+wxvG0iOQwKaNhkRZG9tZwzTfsSOLX/voykqOdMMFa43wlwpIpM6zmU3pLBQzkCfbXwiDwIDAQAB",
@@ -69,7 +69,8 @@
     }
   ],
   "action": {
-    "default_title": "Reset pinned tab",
+    "default_title": "Monochrome",
+    "default_popup": "options.html",
     "default_icon": {
       "16": "icons/16.png",
       "32": "icons/32.png"

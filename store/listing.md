@@ -26,7 +26,7 @@ Works with Chrome's vertical tabs. Nothing is added to the window, and nothing l
 
 **Icon:** `store/icon-128.png`, 96 by 96 artwork on a 128 by 128 canvas, from `swift store/icon.swift store/icon-source.png store/icon-128.png`
 
-**Screenshots** (1280×800 JPEG), in order: `store/screenshots/1-switcher.jpg`, `2-profiles.jpg`, `3-router.jpg`, made with `Monochrome --demo --backdrop`, `--demo-profiles --backdrop` and `--demo-settings --backdrop`
+**Screenshots** (1280×800 JPEG), in order: `store/screenshots/1-switcher.jpg`, `2-profiles.jpg`, `3-router.jpg`, made with `Monochrome --demo --thumbs=<dir> --backdrop=<page.png> --capture=<out.png>` (five public pages captured with headless Chrome at 1440×900 and the capture scaled to 1280×800), `--demo-profiles --backdrop` and `--demo-settings --backdrop`
 
 **Small promo tile** (440×280): `store/screenshots/small-tile.jpg`; **marquee** (1400×560): `store/screenshots/marquee-tile.jpg`, both from `swift store/tiles.swift store/icon-source.png <out dir>`, then saved as JPEG
 

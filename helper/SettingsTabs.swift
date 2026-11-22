@@ -41,8 +41,7 @@ final class GeneralModel: ObservableObject {
     isDefaultBrowser = NSWorkspace.shared.urlForApplication(toOpen: URL(string: "https://example.com")!) == Bundle.main.bundleURL
     browserWarning = browser.isChromium && Chrome.runningWithFlags() == false
       ? "\(runningChromiumName) is running without its launch flags. Quit it (⌘Q) and open it from the Dock." : nil
-    // Safari's history is behind Full Disk Access: readable or not.
-    fullDiskAccess = SafariHistory.databaseURL(profile: "").flatMap { try? FileHandle(forReadingFrom: $0) }.map { try? $0.close(); return true } ?? false
+    fullDiskAccess = Self.hasFullDiskAccess
     // The Dock's preferences are read through `defaults`, so not on every refresh.
     if Date().timeIntervalSince(dockReadAt) > 10 {
       dockReadAt = Date()
@@ -113,8 +112,16 @@ final class GeneralModel: ObservableObject {
 
   func openExtensionShortcuts() { Chrome.open([URL(string: "\(Browser.active.chromium.scheme)://extensions/shortcuts")!], activate: true) }
 
-  static func openPrivacyPane(_ anchor: String) {
-    NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?\(anchor)")!)
+  // Safari's history is behind Full Disk Access: readable or not.
+  static var hasFullDiskAccess: Bool {
+    SafariHistory.databaseURL(profile: "").flatMap { try? FileHandle(forReadingFrom: $0) }.map { try? $0.close(); return true } ?? false
+  }
+
+  // System Settings at the permission's list, with the guide beside it: the steps, and the app's icon
+  // to drag onto the list when Monochrome isn't in it (PermissionGuide.swift).
+  @MainActor static func guideAccessibility() { PermissionGuide.shared.show(.accessibility(app: "Monochrome")) }
+  @MainActor static func guideFullDiskAccess() {
+    PermissionGuide.shared.show(.fullDiskAccess(app: "Monochrome", isGranted: { hasFullDiskAccess }))
   }
 }
 
@@ -201,7 +208,7 @@ struct GeneralSettings: View {
         StatusRow(title: "Default browser", detail: "Links from other apps reach Monochrome first", symbol: "link",
                   ok: model.isDefaultBrowser, okText: "Monochrome", button: "Make Default…", action: model.makeDefault)
         StatusRow(title: "Accessibility", detail: "For ⌃Tab, ⌥⌘-click, ⌘L, ⌘T and the profile hotkeys", symbol: "accessibility",
-                  ok: model.accessibility, okText: "Allowed", button: "Open Settings…") { GeneralModel.openPrivacyPane("Privacy_Accessibility") }
+                  ok: model.accessibility, okText: "Allowed", button: "Open Settings…") { GeneralModel.guideAccessibility() }
       }
     }
     .onAppear { automatic = updates.get(); install = silent.get(); betas = beta.get() }
@@ -324,6 +331,10 @@ struct TabsSettings: View {
 
 struct MiniBrowserSettings: View {
   @ObservedObject private var prefs = PrefsObserver.shared
+  // Keep picker selections in SwiftUI's state graph as well as in the app's defaults. A closure
+  // binding that only reads Prefs can save a value without refreshing the popup button's title.
+  @AppStorage(Pref.routeDefault.rawValue, store: Prefs.store) private var routeDefault = RouteDefault.mini
+  @AppStorage(Pref.miniIdleHours.rawValue, store: Prefs.store) private var miniIdleHours = 12
   private static let idle = [(0, "Never"), (1, "1 hour"), (12, "12 hours"), (24, "1 day"), (168, "1 week")]
 
   var body: some View {
@@ -336,13 +347,13 @@ struct MiniBrowserSettings: View {
     } right: {
       Section("Opening and Closing") {
         SettingRow("Links from other apps", detail: "Open this way when no Router rule claims them", symbol: "arrow.up.right.square") {
-          Picker("Links from other apps open as", selection: Binding(get: { Prefs.routeDefault }, set: { Prefs.set(.routeDefault, $0.rawValue) })) {
+          Picker("Links from other apps open as", selection: $routeDefault) {
             ForEach(RouteDefault.allCases) { Text($0.title).tag($0) }
           }
           .labelsHidden().fixedSize()
         }
         SettingRow("Close when unused for", detail: "A mini browser left unfocused closes itself", symbol: "moon.zzz") {
-          Picker("Close when unused for", selection: Binding(get: { Prefs.miniIdleHours }, set: { Prefs.set(.miniIdleHours, $0) })) {
+          Picker("Close when unused for", selection: $miniIdleHours) {
             ForEach(Self.idle, id: \.0) { Text($0.1).tag($0.0) }
           }
           .labelsHidden().fixedSize()
@@ -379,7 +390,7 @@ struct CommandBarSettings: View {
         SettingToggle("Google suggestions", detail: "What is typed goes to Google as it is typed", symbol: "text.magnifyingglass", isOn: Prefs.binding(.omniboxSuggestions))
         if model.safariInPlay {
           StatusRow(title: "Full Disk Access", detail: "For Safari's history and bookmarks", symbol: "internaldrive", ok: model.fullDiskAccess, okText: "Allowed",
-                    button: "Open Settings…") { GeneralModel.openPrivacyPane("Privacy_AllFiles") }
+                    button: "Open Settings…") { GeneralModel.guideFullDiskAccess() }
         }
       }
     }
