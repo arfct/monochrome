@@ -6,7 +6,7 @@ import AppKit
 // folder to drag onto chrome://extensions, and the steps. A standard window at a high level, so it stays
 // over Chrome while the user turns on Developer mode and drops the folder, in each profile, and so it is a
 // key, active window the drag can begin from. The Browser tab's Install Extension… button and the mini
-// browser's bar show it and open Chrome's extensions page. The folder is dragged by writing its real
+// browser's bar show it and open Chrome's or Edge's extensions page. The folder is dragged by writing its real
 // file URL to the pasteboard (not a copy, which Load unpacked needs); the standard key window is what
 // lets that drag begin.
 final class InstallExtensionPanel {
@@ -15,9 +15,13 @@ final class InstallExtensionPanel {
   // the drag carried nothing a drop target could take.
   static let folder = URL(fileURLWithPath: Bundle.main.resourcePath! + "/extension", isDirectory: true)
   private var window: NSWindow?
+  private var builtFor: Browser?
+
+  // Chrome's or Edge's extensions page, by the browser in front or the Browser setting.
+  private var browser: Browser { Browser.active.chromium }
 
   func show() {
-    if window == nil { window = make() }
+    if window == nil || builtFor != browser { window?.orderOut(nil); window = make(); builtFor = browser }
     guard let window, let screen = NSScreen.main else { return }
     let visible = screen.visibleFrame
     if !window.isVisible {
@@ -39,17 +43,17 @@ final class InstallExtensionPanel {
     let folder = FolderDragView(url: Self.folder)
     folder.frame = NSRect(x: 20, y: 86, width: 100, height: 96)
     let text = NSTextField(wrappingLabelWithString:
-      "1. Choose the Chrome profile to set up.\n2. Turn on Developer mode, top right.\n3. Drag this folder onto the page.\n\nRepeat for each profile.")
+      "1. Choose the \(browser.name) profile to set up.\n2. Turn on Developer mode, top right.\n3. Drag this folder onto the page.\n\nRepeat for each profile.")
     text.font = .systemFont(ofSize: 13)
     text.frame = NSRect(x: 140, y: 56, width: 260, height: 126)
-    let open = NSButton(title: "Open chrome://extensions", target: self, action: #selector(openExtensionsPage))
+    let open = NSButton(title: "Open \(browser.scheme)://extensions", target: self, action: #selector(openExtensionsPage))
     open.bezelStyle = .rounded
     open.frame = NSRect(x: 136, y: 16, width: 220, height: 28)
     [folder, text, open].forEach(content.addSubview)
     return window
   }
 
-  @objc private func openExtensionsPage() { Chrome.open([URL(string: "chrome://extensions")!], activate: true) }
+  @objc private func openExtensionsPage() { Chrome.open([URL(string: "\(browser.scheme)://extensions")!], activate: true) }
 }
 
 // The folder icon in the install window, a drag source that puts the folder's real file URL on the
