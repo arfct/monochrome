@@ -21,7 +21,9 @@ settings:
     # Sparkle's updater and XPC services need it, and so does notarization.
     ENABLE_HARDENED_RUNTIME: YES
     # The version lives here, not in the plist; `make release VERSION=x.y` rewrites both numbers and the
-    # extension manifest's. Sparkle compares CFBundleVersion, so it is the version too.
+    # extension manifest's. CURRENT_PROJECT_VERSION is CFBundleVersion, the build number Sparkle compares: it
+    # goes up by one on every release. It holds "1.4.1" only because releases up to 1.4.1 used the version as
+    # the build; the next release gives the first whole number by hand, BUILD=6 (scripts/set-version.py).
     MARKETING_VERSION: "1.4.1"
     CURRENT_PROJECT_VERSION: "1.4.1"
 packages:
