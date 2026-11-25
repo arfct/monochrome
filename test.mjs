@@ -822,12 +822,17 @@ if (fs.existsSync(helperBinary)) {
   const songPage2 = await ctx.newPage();
   await songPage2.goto('https://open.spotify.com/pip');
   await songPage2.evaluate(() => navigator.mediaSession.setActionHandler('enterpictureinpicture', () => { document.title = 'pip'; }));
+  // Its videos are marked against Chrome's own automatic pop-out while the setting is on, and only then.
+  await songPage2.evaluate(() => document.body.append(document.createElement('video')));
+  const videoMarked = () => songPage2.evaluate(() => document.querySelector('video').disablePictureInPicture);
+  await songPage2.waitForFunction(() => document.querySelector('video').disablePictureInPicture, null, { timeout: 3000 });
   const song2 = await sw.evaluate(async () => (await chrome.tabs.query({ url: 'https://open.spotify.com/pip' }))[0].id);
   for (let i = 0; i < 50 && !(await sw.evaluate(id => music.has(id), song2)); i++) await sleep(100);
   await setPrefs({ player: false });
   assert.equal(await sw.evaluate(() => playerState()), null);
   await setPrefs({ playerStopPopout: false });
-  await sleep(300);
+  await sleep(1300);
+  assert.equal(await videoMarked(), false);
   await sw.evaluate(() => playerState());
   await sw.evaluate(() => playerAction({ action: 'enterpictureinpicture' }));
   await songPage2.waitForFunction(() => document.title === 'pip', null, { timeout: 3000 });
@@ -835,8 +840,9 @@ if (fs.existsSync(helperBinary)) {
   await setPrefs({});
   await sleep(300);
   await sw.evaluate(() => playerAction({ action: 'enterpictureinpicture' }));
-  await sleep(500);
+  await sleep(1000);
   assert.equal(await songPage2.title(), 'not');
+  assert.equal(await videoMarked(), true);
   await songPage2.close();
   console.log('prefs: player and playerStopPopout: ok');
 

@@ -39,7 +39,7 @@ async function playerState() {
   if (audible) lastPlayed = audible.id;
   const id = music.has(lastPlayed) ? lastPlayed : [...music.keys()].at(-1);
   if (id === undefined) return null; // the last one went while we waited
-  const { title, artist, artwork } = music.get(id);
+  const { title, artist, artwork, video } = music.get(id);
   const tab = await chrome.tabs.get(id).catch(() => null);
   // Safari reports no muted state and cannot mute a tab: there the player has no speaker button.
   const muted = tab?.mutedInfo ? tab.mutedInfo.muted : undefined;
@@ -50,7 +50,7 @@ async function playerState() {
   if (active?.id === id) playerClosed = null; // back on the music tab: × is undone for when you leave
   return {
     show: win?.type === 'normal' && win.state !== 'minimized' && active?.id !== id && playerClosed !== id && (SAFARI || sidebar >= PLAYER_MIN_STRIP),
-    title, artist, artwork, playing: playerTab.playing, sidebar, muted, favicon: await favicon(tab?.url),
+    title, artist, artwork, playing: playerTab.playing, sidebar, muted, video: !SAFARI && !!video, favicon: await favicon(tab?.url),
     window: win && { left: win.left, top: win.top, width: win.width, height: win.height },
   };
 }
@@ -76,7 +76,24 @@ async function playerAction({ action }) {
   if (!playerTab) return;
   if (action === 'close') playerClosed = playerTab.id;
   else if (action === 'mute') await chrome.tabs.update(playerTab.id, { muted: !playerTab.muted }).catch(() => {});
-  else if (action === 'focus') {
+  else if (action === 'popout') {
+    // music.js lets one pop-out through; then the tab is shown and left, which is when Chrome pops a
+    // video out. The front tab of the music tab's window flashes the music tab for a moment, and the
+    // visit stays out of ⌃Tab's order (background.js). A music tab already in front of its own window
+    // (another one than the player's) has nothing to leave: nothing happens.
+    // ponytail: Chrome pops out only what its automatic picture-in-picture allows (a playing video, the
+    // flag or the site's support); otherwise the press is a flash and nothing more.
+    const tab = await chrome.tabs.get(playerTab.id).catch(() => null);
+    const [back] = tab ? await chrome.tabs.query({ active: true, windowId: tab.windowId }) : [];
+    if (!tab || !back || back.id === tab.id) return;
+    await chrome.tabs.sendMessage(tab.id, { musicAction: 'popout' }).catch(() => {});
+    mruSkip = tab.id;
+    if (!await chrome.tabs.update(tab.id, { active: true }).catch(() => null)) return void (mruSkip = null);
+    await new Promise(resolve => setTimeout(resolve, 300));
+    // Back, unless another tab was picked meanwhile.
+    const [now] = await chrome.tabs.query({ active: true, windowId: tab.windowId });
+    if (now?.id === tab.id) await chrome.tabs.update(back.id, { active: true }).catch(() => {});
+  } else if (action === 'focus') {
     const tab = await chrome.tabs.update(playerTab.id, { active: true }).catch(() => null);
     if (tab) await chrome.windows.update(tab.windowId, { focused: true });
   } else {

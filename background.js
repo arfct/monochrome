@@ -402,7 +402,9 @@ function recent(step, fresh) {
   });
 }
 
+let mruSkip = null; // a tab shown for a moment by the player's pop-out button (player.js)
 function activated(tabId) {
+  if (tabId === mruSkip) { mruSkip = null; return; }
   return run(async () => {
     // The walk's own moves arrive a moment after each step; a later click on one of those tabs is yours.
     if (walk?.visited.has(tabId) && Date.now() - walk.at < 1000) return;

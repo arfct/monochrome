@@ -22,7 +22,7 @@ struct Bounds: Decodable { let left, top, width, height: Double }
 struct PlayerState: Decodable {
   let show: Bool
   let title, artist, artwork, favicon: String?
-  let playing, muted: Bool?
+  let playing, muted, video: Bool?
   let sidebar: Double?
   let window: Bounds?
 }
@@ -79,7 +79,7 @@ final class Player: NSObject, NSMenuDelegate {
   let title = NSTextField(labelWithString: "")
   let artist = NSTextField(labelWithString: "")
   let icon = NSImageView()
-  var playButton: PlayerButton!, muteButton: PlayerButton!
+  var playButton: PlayerButton!, muteButton: PlayerButton!, popoutButton: PlayerButton!
   var state: PlayerState?
   var artworkURL: String?, faviconData: String?
 
@@ -114,7 +114,8 @@ final class Player: NSObject, NSMenuDelegate {
 
     playButton = button("pause.fill", "playpause")
     muteButton = button("speaker.wave.3.fill", "mute")
-    let controls = NSStackView(views: [icon, button("backward.end.fill", "previoustrack"), playButton, button("forward.end.fill", "nexttrack"), muteButton])
+    popoutButton = button("pip.enter", "popout") // a site with video: Chrome's own pop-out (player.js)
+    let controls = NSStackView(views: [icon, button("backward.end.fill", "previoustrack"), playButton, button("forward.end.fill", "nexttrack"), muteButton, popoutButton])
     controls.distribution = .equalSpacing
     controls.alignment = .centerY
     barView.addSubview(controls)
@@ -203,6 +204,7 @@ final class Player: NSObject, NSMenuDelegate {
     if compactCard.isHidden == false {
       items = [("Previous", "previoustrack"), ("Next", "nexttrack")]
       if let muted = state?.muted { items.append((muted ? "Unmute" : "Mute", "mute")) }
+      if state?.video == true { items.append(("Pop Out", "popout")) }
     }
     for (title, action) in items + [("Hide Player", "close")] {
       if action == "close" && !items.isEmpty { menu.addItem(.separator()) }
@@ -219,6 +221,7 @@ final class Player: NSObject, NSMenuDelegate {
     set(compactPlay, s.playing == true ? "pause.fill" : "play.fill")
     set(muteButton, s.muted == true ? "speaker.slash.fill" : "speaker.wave.3.fill")
     muteButton.isHidden = s.muted == nil
+    popoutButton.isHidden = s.video != true
     title.stringValue = s.title ?? ""
     artist.stringValue = s.artist ?? ""
     if s.favicon != faviconData || icon.image == nil {

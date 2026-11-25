@@ -403,7 +403,7 @@ struct CommandBarSettings: View {
 struct PlayerSettings: View {
   @ObservedObject private var prefs = PrefsObserver.shared
   // The sites music.js runs on (manifest.json's content_scripts).
-  static let sites = ["Spotify", "YouTube Music", "SoundCloud", "Apple Music", "Tidal", "Bandcamp", "Pandora", "Amazon Music", "Deezer"]
+  static let sites = ["Spotify", "YouTube Music", "YouTube", "SoundCloud", "Apple Music", "Tidal", "Bandcamp", "Pandora", "Amazon Music", "Deezer"]
 
   var body: some View {
     Columns {

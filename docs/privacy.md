@@ -7,7 +7,7 @@ Monochrome is a Chrome extension and a companion macOS app. The extension sends 
 - Tab addresses and titles, to keep locked tabs at their address, order tabs, walk them by recent use, and name windows and groups.
 - A picture of the tab in front, taken after you switch to it, when it loads and after you scroll, for the ⌃Tab switcher's thumbnails. The picture is scaled down and passed to the Monochrome app on your Mac, which keeps it in memory only and discards it when the tab closes or Chrome restarts.
 - Site icons, for the switcher and the mini browser bar.
-- On nine music sites (Spotify, YouTube Music, SoundCloud, Apple Music, Tidal, Bandcamp, Pandora, Amazon Music, Deezer), the title, artist and artwork address of the track the site reports to the browser, for the sidebar player.
+- On ten sites (Spotify, YouTube Music, YouTube, SoundCloud, Apple Music, Tidal, Bandcamp, Pandora, Amazon Music, Deezer), the title, artist and artwork address of the track the site reports to the browser, for the sidebar player.
 - In locked tabs only, clicks on links that would open a new tab, so they open as a peek browser instead. No page content is read for this.
 - When you ask for the reader on a page, the text of that page, its headings and image captions, and the addresses of its images and videos. Pages you do not ask about are not read.
 
