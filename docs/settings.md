@@ -47,7 +47,7 @@ This document does not cover the Router's rule format (`docs/link-routing.md`), 
 | 14 | Link router | none | app (`Routes.swift`), extension (`routes.js`) | yes | no group destination | Router tab |
 | 15 | Profile hotkeys | ⌃⌥→, ⌃⌥←, ⌃⌥1 to ⌃⌥9 | app (`Profiles.swift`) | yes | yes | `profileHotkeys` |
 | 16 | Profile HUD, 1.2 seconds | none | app | yes | yes | none |
-| 17 | Mini player on the tab sidebar, nine music sites | none | extension (`player.js`, `music.js`), app panel (`Player.swift`) | yes | Safari 27.3 or later | none |
+| 17 | Mini player on the tab sidebar, ten sites | none | extension (`player.js`, `music.js`), app panel (`Player.swift`) | yes | Safari 27.3 or later | none |
 | 18 | Chrome's own pop-out player stopped on those sites | none | extension (`music.js`) | yes | unmeasured | none |
 | 19 | Command bar | ⌘L, ⌘T; ⌥Return does the other | app (`Omnibox.swift`), data from the extension | yes | yes | `omnibox`, one switch for both keys |
 | 20 | Google suggestions in the command bar | none | app | yes | yes | none |
@@ -195,7 +195,7 @@ Notes on what each does when off:
 | Mini player on the tab sidebar | T | on | `player`, sent | `playerState` in `player.js` | Artwork, title and controls while a music tab plays behind |
 | Stop the browser's pop-out player | T, disabled when the mini player is off | on | `playerStopPopout`, sent | `music.js`, told by `music-relay.js` | On the listed sites, when their tab is left |
 
-Beside them, the nine sites as a plain list: Spotify, YouTube Music, SoundCloud, Apple Music, Tidal, Bandcamp, Pandora, Amazon Music, Deezer.
+Beside them, the ten sites as a plain list: Spotify, YouTube Music, YouTube, SoundCloud, Apple Music, Tidal, Bandcamp, Pandora, Amazon Music, Deezer.
 
 `music.js` runs in the page's world and cannot read extension storage. `music-relay.js` reads `prefs` from `chrome.storage.local`, watches it for changes, and posts `{ monochromeMusicPrefs: { stopPopout } }` to the page. `music.js` always holds a site's `enterpictureinpicture` handler back, and registers it when told the setting is off, because the site may register before the relay's read returns. The effective value is `player && playerStopPopout`.
 
@@ -233,7 +233,7 @@ Nothing on the requested list was dropped: each item can be honoured with a guar
 
 These get no row, with the reason:
 
-- **Per-site switches for the mini player.** The nine sites are static `content_scripts` matches in `manifest.json`; a per-site switch means registering the scripts at run time.
+- **Per-site switches for the mini player.** The ten sites are static `content_scripts` matches in `manifest.json`; a per-site switch means registering the scripts at run time.
 - **Mini browser size and position.** One fixed inset in `mini-browser.js`.
 - **Search engine.** Chrome's default through `chrome.search`; Google on Safari, decided in `docs/safari.md`.
 - **⌘L, ⌘O, ⇧⌘O inside a mini browser, and the bar itself.** They act only in windows Monochrome made, and the bar is the only way to move a page into the browser.

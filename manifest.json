@@ -36,6 +36,7 @@
       "matches": [
         "https://open.spotify.com/*",
         "https://music.youtube.com/*",
+        "https://www.youtube.com/*",
         "https://soundcloud.com/*",
         "https://music.apple.com/*",
         "https://listen.tidal.com/*",
@@ -54,6 +55,7 @@
       "matches": [
         "https://open.spotify.com/*",
         "https://music.youtube.com/*",
+        "https://www.youtube.com/*",
         "https://soundcloud.com/*",
         "https://music.apple.com/*",
         "https://listen.tidal.com/*",
