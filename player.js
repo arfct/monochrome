@@ -8,11 +8,19 @@
 //
 // The sidebar's width is the window's minus the page's. In Safari the app finds the sidebar itself over
 // Accessibility (Safari's vertical tabs are new in 27.3), so the width does not gate the player there.
-// ponytail: a side panel open on the right also counts as sidebar, so the player gets too wide.
+// A side panel (Claude, reading list...) also narrows the page, and Chrome tells extensions nothing about
+// it. It is at least SIDE_PANEL_MIN wide, so a jump that big keeps the last width instead.
+// ponytail: wrong while a side panel was already open when the extension started, until it closes.
 
 // Narrower than this there is no sidebar to sit on (hidden with ⌘S): no player. A sidebar collapsed to
 // its icon strip is wider, and the app draws the compact player there (Player.compactBelow).
 const PLAYER_MIN_STRIP = 40;
+const SIDE_PANEL_MIN = 320; // Chrome's minimum side panel width
+let sidebarWidth = null;
+const sidebarFrom = measured => {
+  if (sidebarWidth === null || measured - sidebarWidth < SIDE_PANEL_MIN) sidebarWidth = measured;
+  return sidebarWidth;
+};
 const music = new Map(); // tabId -> { title, artist, artwork }
 chrome.tabs.onReplaced.addListener((added, removed) => {
   if (music.has(removed)) { music.set(added, music.get(removed)); music.delete(removed); }
@@ -46,7 +54,7 @@ async function playerState() {
   playerTab = { id, playing: audible?.id === id, muted };
   const win = await chrome.windows.getLastFocused({ populate: true }).catch(() => null);
   const active = win?.tabs.find(t => t.active);
-  const sidebar = win && active?.width ? win.width - active.width : 0;
+  const sidebar = win && active?.width ? sidebarFrom(win.width - active.width) : 0;
   if (active?.id === id) playerClosed = null; // back on the music tab: × is undone for when you leave
   return {
     show: win?.type === 'normal' && win.state !== 'minimized' && active?.id !== id && playerClosed !== id && (SAFARI || sidebar >= PLAYER_MIN_STRIP),
